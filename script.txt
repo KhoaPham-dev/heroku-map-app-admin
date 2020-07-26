@@ -1,0 +1,13 @@
+- Reset db:
+db.dataPath.remove({})
+db.dataPath.insertOne({
+  "_id":1, 
+  "path": [], 
+  "vertexs": [], 
+  "width": 0, 
+  "height": 0,
+  "information":[]
+})
+
+-export json:
+mongoexport -d map -c dataPath -o C:\Users\super\Desktop\db.json
