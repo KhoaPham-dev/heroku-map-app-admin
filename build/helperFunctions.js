@@ -73,14 +73,28 @@ function trackFullSetup(pixels, width, height, currPosInPxsArr) {
   }
   return data;
 };
-function trackPaths(pixels, width, height, data, dataTrackFullSetup) {
-  for(let i = 0; i < data.vertexs.length; i++){
-    let start = data.vertexs[i];
-    if (isCorrectPixel(start, dataTrackFullSetup)) {
-        nonrecursive(pixels, data, width, height, start, dataTrackFullSetup);
-    }   
-  }
-  return data;
+let isNewAddedPath = false;
+function trackPaths(pixels, width, height, data, dataTrackFullSetup, start) {
+  if (isCorrectPixel(start, dataTrackFullSetup) && newVertexs.includes(start)) {
+      nonrecursive(pixels, data, width, height, start, dataTrackFullSetup);
+      if(isNewAddedPath){
+        dataPath.vertexs.push(start);
+        newVertexs.splice(newVertexs.indexOf(start), 1);
+
+        dataPath.information.push(newInformation.find(e=>{return e.vertex == start}));
+        newInformation.splice(newInformation.findIndex(e=>{return e.vertex == start}), 1);
+
+        document.getElementById(`${start}`).src = "/images/destination.png";
+        isNewAddedPath = false;
+        return data;
+      }
+      else {
+        alert("Không thêm được đường nào!");
+        return undefined;
+      }
+  }   
+  else if(!newVertexs.includes(start))alert("Vị trí này đã được thêm vào!");
+  return undefined;
 };
 function colorFn(r, g, b) {
   //if (r >= 100 && r <= 135 && g >= 170 && g <= 205 && b >= 120 && b <= 155) {
@@ -639,7 +653,6 @@ function nonrecursive(pixels, data, width, height, start, dataTrackFullSetup) {
   //Init setting up
   let res = radar(pixels, width, height, currPosInPxsArr, areaTest, data, start, dataTrackFullSetup);
   if(!res)return;
-  if(res.dir)return;
   
 
   while(queuePosition>=0){
@@ -725,48 +738,55 @@ function nonrecursive(pixels, data, width, height, start, dataTrackFullSetup) {
       //Đã đến nơi
       //Nếu tới rồi thì nối đến điểm cần đến đó, thêm một tên, đường đi và độ dài vào data.path
       else if(res.dir){
-          let d = Math.floor((currPosInPxsArr / 4) / width);  //row
-          let c = (currPosInPxsArr / 4) % width;              //col
-          for(let i = 1; i <= res.points; i++){
-            let t = dir[res.dir] ? ((d + dir[res.dir]['d'] * jump * i) * width + (c + dir[res.dir]['c'] * jump * i)) * 4
-                                : ((d + subDir[res.dir]['d'] * jump * i) * width + (c + subDir[res.dir]['c'] * jump * i)) * 4;
-            marked[currPosInPxsArr] = t;
-            currPosInPxsArr = t;
+        //Nếu hướng tìm thấy điểm đến không trùng với hướng đang đi thì mới thêm vào queue
+        if(res.dir != currDir && subDir[res.dir] && dir[currDir]){
+          queue[++queuePosition] = currPosInPxsArr;
+          queueDir[queuePosition] = currDir;
+        }
+        let d = Math.floor((currPosInPxsArr / 4) / width);  //row
+        let c = (currPosInPxsArr / 4) % width;              //col
+        for(let i = 1; i <= res.points; i++){
+          let t = dir[res.dir] ? ((d + dir[res.dir]['d'] * jump * i) * width + (c + dir[res.dir]['c'] * jump * i)) * 4
+                              : ((d + subDir[res.dir]['d'] * jump * i) * width + (c + subDir[res.dir]['c'] * jump * i)) * 4;
+          marked[currPosInPxsArr] = t;
+          currPosInPxsArr = t;
+        }
+        marked[currPosInPxsArr] = res.end;
+        currPosInPxsArr = res.end;
+        //nếu đoạn đường này chưa có thì mới thêm vào
+        let isAvail = false;
+        for(let j = 0; j < data.path.length; j++){
+          let availPathNames = data.path[j]["name"].split("_");
+          if(availPathNames.includes(`${start}`) && availPathNames.includes(`${currPosInPxsArr}`)){
+            //Nếu độ dài đường mới ngắn hơn thì lấy đường mới, bỏ đường cũ
+            if(Object.keys(marked).length + 1 < data.path[j]["length"])
+              data.path.splice(j, 1);
+            else isAvail = true;
+            break;
           }
-          marked[currPosInPxsArr] = res.end;
-          currPosInPxsArr = res.end;
-          //nếu đoạn đường này chưa có thì mới thêm vào
-          let isAvail = false;
-          for(let j = 0; j < data.path.length; j++){
-            let availPathNames = data.path[j]["name"].split("_");
-            if(availPathNames.includes(`${start}`) && availPathNames.includes(`${currPosInPxsArr}`)){
-              //Nếu độ dài đường mới ngắn hơn thì lấy đường mới, bỏ đường cũ
-              if(Object.keys(marked).length + 1 < data.path[j]["length"])
-                data.path.splice(j, 1);
-              else isAvail = true;
-              break;
-            }
-          }
-          if(!isAvail)
-            data.path.push({
-              name: `${start}_${currPosInPxsArr}`,
-              length: Object.keys(marked).length + 1,
-              marked: {...marked}
-            })
-          //backtrack về hướng mới
-          let result = backTracking(originalPixels, pixels, queue, queueDir, marked, subDir , dir, 
-              currPosInPxsArr, currDir, queuePosition, width, jump, start);
-          if(!result){
-            console.log("end");
-            return;
-          }
-          backTrack = result.backTrack;
-          currPosInPxsArr = result.currPosInPxsArr;
-          dir[currDir] ? prevCurrDir = currDir : prevSubCurrDir = currDir;
-          currDir = result.currDir;
-          queuePosition = result.queuePosition;
-          pixels.set(result.pixels);
-          marked = {...result.marked};
+        }
+        if(!isAvail){
+          data.path.push({
+            name: `${start}_${currPosInPxsArr}`,
+            length: Object.keys(marked).length + 1,
+            marked: {...marked}
+          })
+          isNewAddedPath = true;
+        }
+        //backtrack về hướng mới
+        let result = backTracking(originalPixels, pixels, queue, queueDir, marked, subDir , dir, 
+            currPosInPxsArr, currDir, queuePosition, width, jump, start);
+        if(!result){
+          console.log("end");
+          return;
+        }
+        backTrack = result.backTrack;
+        currPosInPxsArr = result.currPosInPxsArr;
+        dir[currDir] ? prevCurrDir = currDir : prevSubCurrDir = currDir;
+        currDir = result.currDir;
+        queuePosition = result.queuePosition;
+        pixels.set(result.pixels);
+        marked = {...result.marked};
       }
       else{ 
         //Kiểm tra có phải điểm nằm chính giữa đường chưa

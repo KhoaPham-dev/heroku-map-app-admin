@@ -5,6 +5,7 @@ let c = document.createElement("canvas");
 let addVertexsOrFindPathModeBtn = document.getElementById("toggle-two-mode");
 let rmEditModeBtn = document.getElementById("rm-edit-mode");
 let newVertexs = [];
+let newInformation = [];
 let imageData;
 let countClick = 0;
 let isFindPathMode = false;
@@ -76,6 +77,7 @@ document.getElementById("submit-dataPath").addEventListener("click",async functi
       },
       body: JSON.stringify(dataPath) // body data type must match "Content-Type" header
     });
+    if(response)console.log("Done!");
 })
 addVertexsOrFindPathModeBtn.addEventListener('click', function(event){
   if(!isFindPathMode){
@@ -101,7 +103,7 @@ imgTemplateTag.addEventListener('click', function(event){
   ev = event;
   document.getElementById("submitVertex").addEventListener("click", function(){
     let nameVertex = document.getElementById("nameOfVertex");
-    if(nameVertex.value && confirm("Bạn có chắc chứ?")){
+    if(nameVertex.value && window.confirm("Bạn có chắc chứ?")){
       addingVertex(ev, nameVertex.value);
       nameVertex.value = '';
       $('#addVertex').modal('hide');
@@ -121,19 +123,20 @@ function addingVertex(event, nameVertex){
   nameVertex = nameVertex.split("|");
   let coord = GetCoordinates(event, 'img-template');
   let posInArrayPixel_coord = (coord.y * imgTag.width + coord.x) * 4;
-  dataPath.vertexs.push(posInArrayPixel_coord);
-  dataPath.information.push({
+  newVertexs.push(posInArrayPixel_coord);
+  //dataPath.vertexs.push(posInArrayPixel_coord);
+  newInformation.push({
     vertex: posInArrayPixel_coord,
     name: nameVertex,
     qty_care: 0
   })
   let dest = document.createElement("img");
-  dest.src = "/images/destination.png";
+  dest.src = "/images/newdestination.png";
   dest.classList.add("dest");
   document.getElementById("container").appendChild(dest);
   dest.onload = function(){
     dest.style.left = coord.x - dest.width / 2;
-    dest.style.top = coord.y - dest.height / 2;
+    dest.style.top = coord.y - dest.height;
     dest.id = `${posInArrayPixel_coord}`;
     dest.addEventListener("click", function(event){
       if(isFindPathMode){
@@ -163,10 +166,11 @@ function findPath(imgTag, coord_1){
   let dataTrackFullSetup = trackFullSetup(getDataOfTemplateImage().data, imgTag.width, imgTag.height, startToTrackFull);
   //start tracking paths
   imageData = ctx.getImageData(0, 0, imgTag.width, imgTag.height);
-  let data = trackPaths(imageData.data, imgTag.width, imgTag.height, dataPath, dataTrackFullSetup);
+  let data = trackPaths(imageData.data, imgTag.width, imgTag.height, dataPath, dataTrackFullSetup, startToTrackFull);
 
   //Tô màu đen lên các đường nối 2 điểm
-  fillColorPathsOfTwoVertexs(imgTag, data, 0,0,0);
+  if(data)
+    fillColorPathsOfTwoVertexs(imgTag, data, 0,0,0);
 }
 function fillColorPathsOfTwoVertexs(imgTag, data, r, g ,b){
   c.width = imgTag.width;
@@ -177,19 +181,27 @@ function fillColorPathsOfTwoVertexs(imgTag, data, r, g ,b){
   console.log(data);
   let count = 1;
   for(let i = 0; i < data.path.length; i++){
-    let prop = data.path[i]["name"].split("_")[0];
-    while(data.path[i].marked[prop]){
-      imageData.data[prop] = r;
-      imageData.data[prop + 1] = g;
-      imageData.data[prop + 2] = b;
-      prop = data.path[i].marked[prop];
+    //let prop = data.path[i]["name"].split("_")[0];
+    // while(data.path[i].marked[prop]){
+    //   imageData.data[prop] = r;
+    //   imageData.data[prop + 1] = g;
+    //   imageData.data[prop + 2] = b;
+    //   prop = data.path[i].marked[prop];
+    //   count++;
+    //   if(!data.path[i].marked[prop])console.log(prop);
+    // }
+    for(let j in data.path[i].marked){
+      imageData.data[data.path[i].marked[j]] = r;
+      imageData.data[data.path[i].marked[j] + 1] = g;
+      imageData.data[data.path[i].marked[j] + 2] = b;
       count++;
-      if(!data.path[i].marked[prop])console.log(prop);
     }
   }
   console.log(count);
   ctx.putImageData(imageData, 0, 0);
-  demoContainer.removeChild(imgTag);
+  try {
+    demoContainer.removeChild(imgTag);
+  } catch (error) {}
   demoContainer.appendChild(c);
   c.addEventListener("click", function(event){
     try {
@@ -206,7 +218,9 @@ function fillColorAllOfPaths(imgTag, data, imageData){
   demoContainer.removeChild(imgTag);
   demoContainer.appendChild(c);
   c.addEventListener("click", function(event){
+    try {
       demoContainer.removeChild(c);
+    } catch (error) {}
       demoContainer.appendChild(imgTag);
   })
 }
