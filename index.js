@@ -38,11 +38,15 @@ client.connect(err => {
 //       return
 //     }
 //     db = client.db('map');
-//     app.listen(5000, () => {
-//       console.log('App listening on port 5000')
+//     app.listen(PORT, () => {
+//       console.log('App listening on port ' + PORT)
 //    })
 // })
-app.use(cors());
+let corsOptions = {
+  origin: false,
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+app.use(cors(corsOptions))
 app.use(express.static(path.join(__dirname, 'build')));
 app.get('/preload', (req, res, next)=>{
   db.collection('dataPath').find({}).toArray((err, dataPath)=>{
@@ -67,19 +71,20 @@ app.post('/upload-data', function(req,res,next){
   let width = dataPath.width;
   let height = dataPath.height;
   let information = dataPath.information;
-  db.collection('dataPath').updateOne(
-    {},
-    { $set: { path,
-              vertexs,
-              width,
-              height,
-              information
-            } 
-    },
-    function(err, collection){ 
-      if (err) throw err; 
-      console.log("Record inserted Successfully"); 
-	}); 
+  if(dataPath && path && vertexs && width && height && information)
+    db.collection('dataPath').updateOne(
+      {},
+      { $set: { path,
+                vertexs,
+                width,
+                height,
+                information
+              } 
+      },
+      function(err, collection){ 
+        if (err) throw err; 
+        console.log("Record inserted Successfully"); 
+    }); 
 		
 	return res.redirect('/');
 }) 

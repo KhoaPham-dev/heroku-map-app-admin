@@ -72,7 +72,7 @@ document.getElementById("submit-dataPath").addEventListener("click",async functi
     const response = await fetch('/upload-data', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
         // 'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: JSON.stringify(dataPath) // body data type must match "Content-Type" header
