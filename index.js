@@ -13,6 +13,8 @@ const PORT = process.env.PORT || 5000;
 
 const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://dbMap:01886557050khoa@map.rgzu3.mongodb.net/map?retryWrites=true&w=majority";
+//For new testing
+//const uri = "mongodb+srv://KhoaPham:01886557050khoa@cluster0.dslaa.mongodb.net/map?retryWrites=true&w=majority"
 const client = new MongoClient(uri, { useNewUrlParser: true,
                                       useUnifiedTopology: true });
 client.connect(err => {
@@ -24,8 +26,8 @@ client.connect(err => {
   app.listen(PORT, () => {
     console.log('App listening on port ' + PORT)
   })
-  //const collection = client.db("test").collection("devices");
-  // perform actions on the collection object
+  const collection = client.db("test").collection("devices");
+  //perform actions on the collection object
   //client.close();
 });
 //First Initializing: Connect mongoDB, open port
@@ -64,6 +66,7 @@ app.get('/preload', (req, res, next)=>{
   })
 })
 //Upload dataPath to db
+//Adding
 app.post('/upload-data', function(req,res,next){ 
   let dataPath = req.body; 
   let path = dataPath.path;
@@ -85,6 +88,5 @@ app.post('/upload-data', function(req,res,next){
         if (err) throw err; 
         console.log("Record inserted Successfully"); 
     }); 
-		
 	return res.redirect('/');
 }) 

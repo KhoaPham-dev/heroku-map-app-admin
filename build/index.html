@@ -20,7 +20,6 @@
   </head>
   <body>
     <button id="toggle-two-mode">Find Paths</button>
-    <button id="add-rm-edit-mode">Remove Vertex</button>
     <button id="submit-dataPath">Submit All Data</button>
     <h1 id="mode">Thêm địa điểm</h1>
 
@@ -31,6 +30,8 @@
 
     <!-- Side Modal Top Right -->
     <!-- To change the direction of the modal animation change .right class -->
+
+    <!-- Add modal -->
     <div class="modal fade right"  id="addVertex"  role="dialog" aria-labelledby="myModalLabel"
       aria-hidden="true">
 
@@ -53,6 +54,31 @@
         </div>
       </div>
     </div>
+
+    <!-- Edit modal -->
+    <div class="modal fade right"  id="editVertex"  role="dialog" aria-labelledby="myEditModalLabel"
+      aria-hidden="true">
+
+      <!-- Add class .modal-side and then add class .modal-top-right (or other classes from list above) to set a position to the modal -->
+      <div class="modal-dialog modal-side modal-top-left" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title w-100" id="myEditModalLabel">Đặt tên địa điểm</h4>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <input type="text" id="editNameOfVertex" class="form-control" placeholder="Tên địa điểm">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button id="submitEditVertex" type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!-- Side Modal Top Right -->
       <!-- jQuery -->
   <script type="text/javascript" src="js/jquery.min.js"></script>

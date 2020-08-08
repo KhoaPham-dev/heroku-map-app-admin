@@ -2,18 +2,12 @@ let demoContainer = document.querySelector('#container');
 let imgTemplateTag = document.getElementById("img-template");
 let imgTag = document.getElementById("img");
 let c = document.createElement("canvas");
-let addVertexsOrFindPathModeBtn = document.getElementById("toggle-two-mode");
-let rmEditModeBtn = document.getElementById("rm-edit-mode");
+let selectVertexsOrFindPathModeBtn = document.getElementById("toggle-two-mode");
 let newVertexs = [];
 let newInformation = [];
 let imageData;
 let countClick = 0;
 let isFindPathMode = false;
-let areMode = "add";
-let coord_1 = {
-  x: 0,
-  y: 0
-}    
 //------------init for dataPath-----------------------
 //This dataPath will get from database
 let dataPath = {
@@ -47,11 +41,13 @@ window.onload = async function(){
   res = await res.json();
   if(res.width && res.width != 0)dataPath = res;
   console.log(dataPath); // parses JSON response into native JavaScript objects
+
   for(let i = 0; i < dataPath.vertexs.length; i++){
     let dest = document.createElement("img");
     dest.src = "/images/destination.png";
     dest.classList.add("dest");
     document.getElementById("container").appendChild(dest);
+
     dest.onload = function(){
       let y = Math.floor((dataPath.vertexs[i] / 4) / dataPath.width);  //row
       let x = (dataPath.vertexs[i] / 4) % dataPath.width;              //col
@@ -62,12 +58,17 @@ window.onload = async function(){
         if(isFindPathMode){
           chooseVertex(event);
         }
+        else{
+          editVertex(event);
+        }
       })
     }
+    
   }
 }
 //end---------get dataPath from mongodb----------------
 
+//upload entire data to db
 document.getElementById("submit-dataPath").addEventListener("click",async function(event){
     const response = await fetch('/upload-data', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -77,9 +78,10 @@ document.getElementById("submit-dataPath").addEventListener("click",async functi
       },
       body: JSON.stringify(dataPath) // body data type must match "Content-Type" header
     });
-    if(response)console.log("Done!");
+    alert('Oke');
 })
-addVertexsOrFindPathModeBtn.addEventListener('click', function(event){
+
+selectVertexsOrFindPathModeBtn.addEventListener('click', function(event){
   if(!isFindPathMode){
     event.target.style.backgroundColor = "blue";
     event.target.innerHTML = "Add Vertexs";
@@ -98,24 +100,25 @@ addVertexsOrFindPathModeBtn.addEventListener('click', function(event){
   isFindPathMode = !isFindPathMode;
 })
 let ev;
+
 imgTemplateTag.addEventListener('click', function(event){
   $('#addVertex').modal('show');
   ev = event;
-  document.getElementById("submitVertex").addEventListener("click", function(){
-    let nameVertex = document.getElementById("nameOfVertex");
-    if(nameVertex.value && window.confirm("Bạn có chắc chứ?")){
-      addingVertex(ev, nameVertex.value);
-      nameVertex.value = '';
-      $('#addVertex').modal('hide');
-    }
-  }, false)
+})
+
+document.getElementById("submitVertex").addEventListener("click", function(){
+  let nameVertex = document.getElementById("nameOfVertex");
+  if(nameVertex.value && window.confirm("Bạn có chắc chứ?")){
+    addingVertex(ev, nameVertex.value);
+    nameVertex.value = '';
+    $('#addVertex').modal('hide');
+  }
 })
 
 function chooseVertex(event){
   countClick++;
   if(countClick == 1){
-    coord_1 = Number(event.target.id);
-    findPath(imgTag, coord_1);
+    findPath(imgTag, Number(event.target.id));
     countClick = 0;
   }
 }
@@ -123,13 +126,24 @@ function addingVertex(event, nameVertex){
   nameVertex = nameVertex.split("|");
   let coord = GetCoordinates(event, 'img-template');
   let posInArrayPixel_coord = (coord.y * imgTag.width + coord.x) * 4;
-  newVertexs.push(posInArrayPixel_coord);
-  //dataPath.vertexs.push(posInArrayPixel_coord);
-  newInformation.push({
-    vertex: posInArrayPixel_coord,
-    name: nameVertex,
-    qty_care: 0
-  })
+  if(dataPath.vertexs.length < 1)
+  {
+    dataPath.vertexs.push(posInArrayPixel_coord);
+    dataPath.information.push({
+      vertex: posInArrayPixel_coord,
+      name: nameVertex,
+      qty_care: 0
+    })
+  }
+  else{
+    newVertexs.push(posInArrayPixel_coord);
+    newInformation.push({
+      vertex: posInArrayPixel_coord,
+      name: nameVertex,
+      qty_care: 0
+    })
+  }
+  
   let dest = document.createElement("img");
   dest.src = "/images/newdestination.png";
   dest.classList.add("dest");
@@ -145,6 +159,45 @@ function addingVertex(event, nameVertex){
     })
   }
 }
+
+function editVertex(event){
+  ev = event;
+  $('#editVertex').modal('show');
+  
+  let informationOfChosenVertex = dataPath.information.find(ele=>{return ele.vertex == ev.target.id});
+  document.getElementById("editNameOfVertex").value = informationOfChosenVertex.name.join("|");
+}
+
+document.getElementById("submitEditVertex").addEventListener("click", submitEditVertexFunc);
+
+function submitEditVertexFunc(){
+  let nameVertex = document.getElementById("editNameOfVertex");
+  if(nameVertex.value){
+    let doWant = window.confirm("Bạn có chắc muốn thay đổi chứ?")
+    if(doWant){
+      //Edit name of the vertex
+      let newNameVertexInArray = nameVertex.value.split("|");
+      dataPath.information[dataPath.information.findIndex(ele=>{return ele.vertex == ev.target.id})].name = newNameVertexInArray;
+
+      nameVertex.value = '';
+      $('#editVertex').modal('hide');
+    }
+  }
+  else{
+    let isRm = window.confirm("Xóa?");
+    if(isRm){
+      //Remove a vertex
+      while(dataPath.path.findIndex(ele=>{return ele.name.split("_").includes(ev.target.id)}) != -1)
+        dataPath.path.splice(dataPath.path.findIndex(ele=>{return ele.name.split("_").includes(ev.target.id)}), 1);
+      dataPath.vertexs.splice(dataPath.vertexs.findIndex(ele=>{return ele == Number(ev.target.id)}), 1);
+      dataPath.information.splice(dataPath.vertexs.findIndex(ele=>{return ele.vertex == Number(ev.target.id)}), 1);
+      
+      document.getElementById("container").removeChild(ev.target);
+      $('#editVertex').modal('hide');
+    }
+  }
+}
+
 function getDataOfTemplateImage(){
   let c = document.createElement("canvas");
   c.width = imgTemplateTag.width;
@@ -153,14 +206,14 @@ function getDataOfTemplateImage(){
   ctx.drawImage(imgTemplateTag,  0, 0, imgTemplateTag.width, imgTemplateTag.height);
   return imageData = ctx.getImageData(0, 0, imgTemplateTag.width, imgTemplateTag.height);
 }
-function findPath(imgTag, coord_1){
+
+function findPath(imgTag, startToTrackFull){
   c.width = imgTag.width;
   c.height = imgTag.height;
   let ctx = c.getContext("2d");
   ctx.drawImage(imgTag,  0, 0, imgTag.width, imgTag.height);
   imageData = ctx.getImageData(0, 0, imgTag.width, imgTag.height);
 
-  let startToTrackFull = coord_1;
   console.log(startToTrackFull);
   //This is setting up template
   let dataTrackFullSetup = trackFullSetup(getDataOfTemplateImage().data, imgTag.width, imgTag.height, startToTrackFull);
@@ -172,6 +225,7 @@ function findPath(imgTag, coord_1){
   if(data)
     fillColorPathsOfTwoVertexs(imgTag, data, 0,0,0);
 }
+
 function fillColorPathsOfTwoVertexs(imgTag, data, r, g ,b){
   c.width = imgTag.width;
   c.height = imgTag.height;
@@ -212,6 +266,7 @@ function fillColorPathsOfTwoVertexs(imgTag, data, r, g ,b){
     demoContainer.appendChild(imgTag);
   })
 }
+
 function fillColorAllOfPaths(imgTag, data, imageData){
   let ctx = c.getContext("2d");
   ctx.putImageData(imageData, 0, 0);
@@ -224,3 +279,4 @@ function fillColorAllOfPaths(imgTag, data, imageData){
       demoContainer.appendChild(imgTag);
   })
 }
+

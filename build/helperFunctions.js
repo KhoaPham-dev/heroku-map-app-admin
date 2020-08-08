@@ -738,7 +738,9 @@ function nonrecursive(pixels, data, width, height, start, dataTrackFullSetup) {
       //Đã đến nơi
       //Nếu tới rồi thì nối đến điểm cần đến đó, thêm một tên, đường đi và độ dài vào data.path
       else if(res.dir){
-        //Nếu hướng tìm thấy điểm đến không trùng với hướng đang đi thì mới thêm vào queue
+        //Nếu hướng tìm thấy điểm đến không trùng với hướng đang đi, 
+        //đồng thời hướng đang đi là thuộc 4 hướng chính và hướng tìm thấy thuộc hướng phụ
+        // thì mới thêm vào queue
         if(res.dir != currDir && subDir[res.dir] && dir[currDir]){
           queue[++queuePosition] = currPosInPxsArr;
           queueDir[queuePosition] = currDir;
