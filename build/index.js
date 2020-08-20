@@ -156,6 +156,9 @@ function addingVertex(event, nameVertex){
       if(isFindPathMode){
         chooseVertex(event);
       }
+      else{
+        editVertex(event);
+      }
     })
   }
 }
@@ -165,7 +168,8 @@ function editVertex(event){
   $('#editVertex').modal('show');
   
   let informationOfChosenVertex = dataPath.information.find(ele=>{return ele.vertex == ev.target.id});
-  document.getElementById("editNameOfVertex").value = informationOfChosenVertex.name.join("|");
+  if(!informationOfChosenVertex)informationOfChosenVertex = newInformation.find(ele=>{return ele.vertex == ev.target.id});
+  if(informationOfChosenVertex)document.getElementById("editNameOfVertex").value = informationOfChosenVertex.name.join("|");
 }
 
 document.getElementById("submitEditVertex").addEventListener("click", submitEditVertexFunc);
@@ -177,8 +181,14 @@ function submitEditVertexFunc(){
     if(doWant){
       //Edit name of the vertex
       let newNameVertexInArray = nameVertex.value.split("|");
-      dataPath.information[dataPath.information.findIndex(ele=>{return ele.vertex == ev.target.id})].name = newNameVertexInArray;
+      if(dataPath.information.findIndex(ele=>{return ele.vertex == ev.target.id}) != -1){
+        dataPath.information[dataPath.information.findIndex(ele=>{return ele.vertex == ev.target.id})].name = newNameVertexInArray;
+      }
+      else{
+        newInformation[newInformation.findIndex(ele=>{return ele.vertex == ev.target.id})].name = newNameVertexInArray;
+      }
 
+      
       nameVertex.value = '';
       $('#editVertex').modal('hide');
     }
@@ -190,7 +200,7 @@ function submitEditVertexFunc(){
       while(dataPath.path.findIndex(ele=>{return ele.name.split("_").includes(ev.target.id)}) != -1)
         dataPath.path.splice(dataPath.path.findIndex(ele=>{return ele.name.split("_").includes(ev.target.id)}), 1);
       dataPath.vertexs.splice(dataPath.vertexs.findIndex(ele=>{return ele == Number(ev.target.id)}), 1);
-      dataPath.information.splice(dataPath.vertexs.findIndex(ele=>{return ele.vertex == Number(ev.target.id)}), 1);
+      dataPath.information.splice(dataPath.information.findIndex(ele=>{return ele.vertex == Number(ev.target.id)}), 1);
       
       document.getElementById("container").removeChild(ev.target);
       $('#editVertex').modal('hide');
@@ -217,13 +227,14 @@ function findPath(imgTag, startToTrackFull){
   console.log(startToTrackFull);
   //This is setting up template
   let dataTrackFullSetup = trackFullSetup(getDataOfTemplateImage().data, imgTag.width, imgTag.height, startToTrackFull);
+  //fillColorAllOfPaths(imgTag, dataTrackFullSetup, imageData);
   //start tracking paths
   imageData = ctx.getImageData(0, 0, imgTag.width, imgTag.height);
   let data = trackPaths(imageData.data, imgTag.width, imgTag.height, dataPath, dataTrackFullSetup, startToTrackFull);
 
   //Tô màu đen lên các đường nối 2 điểm
-  if(data)
-    fillColorPathsOfTwoVertexs(imgTag, data, 0,0,0);
+   if(data)
+     fillColorPathsOfTwoVertexs(imgTag, data, 0,0,0);
 }
 
 function fillColorPathsOfTwoVertexs(imgTag, data, r, g ,b){

@@ -19,20 +19,23 @@
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
-    <button id="toggle-two-mode">Find Paths</button>
-    <button id="submit-dataPath">Submit All Data</button>
-    <h1 id="mode">Thêm địa điểm</h1>
+    <div style="position: fixed; top: 5px; left: 5px; z-index: 999999">
+      <button id="toggle-two-mode">Find Paths</button>
+      <button id="submit-dataPath">Submit All Data</button>
+      <h1 id="mode">Thêm địa điểm</h1>
+    </div>
+    
 
     <div id="container" class="container-map">
-      <img class="img-template" id="img-template" src="/images/SPKT.png" alt="" crossorigin="anonymous">
-      <img class="img" id="img" src="/images/SoDoSPKT.jpg" alt="" crossorigin="anonymous">
+      <img class="img-template" id="img-template" src="/images/newspktdrawpath.jpg" alt="" crossorigin="anonymous">
+      <img class="img" id="img" src="/images/newspkt.jpg" alt="" crossorigin="anonymous">
     </div>
 
     <!-- Side Modal Top Right -->
     <!-- To change the direction of the modal animation change .right class -->
 
     <!-- Add modal -->
-    <div class="modal fade right"  id="addVertex"  role="dialog" aria-labelledby="myModalLabel"
+    <div class="modal fade right" style="z-index: 9999999" id="addVertex"  role="dialog" aria-labelledby="myModalLabel"
       aria-hidden="true">
 
       <!-- Add class .modal-side and then add class .modal-top-right (or other classes from list above) to set a position to the modal -->
@@ -56,7 +59,7 @@
     </div>
 
     <!-- Edit modal -->
-    <div class="modal fade right"  id="editVertex"  role="dialog" aria-labelledby="myEditModalLabel"
+    <div class="modal fade right" style="z-index: 9999999" id="editVertex"  role="dialog" aria-labelledby="myEditModalLabel"
       aria-hidden="true">
 
       <!-- Add class .modal-side and then add class .modal-top-right (or other classes from list above) to set a position to the modal -->
